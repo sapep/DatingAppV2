@@ -1,29 +1,39 @@
-import { Component, inject } from '@angular/core';
+import { ToastrService } from 'ngx-toastr';
 import { FormsModule } from '@angular/forms';
-import { AccountsService } from '../_services/accounts.service';
+import { Component, inject } from '@angular/core';
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
+import { AccountsService } from '../_services/accounts.service';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { TitleCasePipe } from '@angular/common';
 
 @Component({
   selector: 'app-nav',
   standalone: true,
   imports: [
     FormsModule,
-    BsDropdownModule
+    BsDropdownModule,
+    RouterLink,
+    RouterLinkActive,
+    TitleCasePipe
   ],
   templateUrl: './nav.component.html',
   styleUrl: './nav.component.css'
 })
 export class NavComponent {
   accountService = inject(AccountsService);
+  private router = inject(Router);
+  private toastr = inject(ToastrService);
   model: any = {};
 
   login() {
     this.accountService.login(this.model).subscribe({
-      error: error => console.error(error)
-    })
+      next: _ => this.router.navigateByUrl("/members"),
+      error: error => this.toastr.error(error.error)
+    });
   }
 
   logout() {
     this.accountService.logout();
+    this.router.navigateByUrl("/");
   }
 }
