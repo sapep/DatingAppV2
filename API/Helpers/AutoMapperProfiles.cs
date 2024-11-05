@@ -22,6 +22,9 @@ public class AutoMapperProfiles : Profile
           source => source.Photos.FirstOrDefault(photo => photo.IsMain)!.Url
         )
       );
+
     CreateMap<Photo, PhotoDto>();
+
+    CreateMap<MemberUpdateDto, AppUser>();
   }
 }

@@ -36,5 +36,9 @@
 }
 
 .profile-button {
-  padding: 10px 17px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 20px;
+  height: 50px;
 }

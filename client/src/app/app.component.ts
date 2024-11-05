@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { NavComponent } from "./nav/nav.component";
 import { AccountsService } from './_services/accounts.service';
 import { HomeComponent } from "./home/home.component";
+import { NgxSpinnerComponent } from 'ngx-spinner';
 
 @Component({
   selector: 'app-root',
@@ -10,7 +11,8 @@ import { HomeComponent } from "./home/home.component";
   imports: [
     RouterOutlet,
     NavComponent,
-    HomeComponent
+    HomeComponent,
+    NgxSpinnerComponent
 ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
