@@ -7,7 +7,7 @@ import { routes } from './app.routes';
 import { errorInterceptor } from './_interceptors/error.interceptor';
 import { jwtInterceptor } from './_interceptors/jwt.interceptor';
 import { NgxSpinnerModule } from 'ngx-spinner';
-import { loadingInterceptor } from './_interceptor/loading.interceptor';
+import { loadingInterceptor } from './_interceptors/loading.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [

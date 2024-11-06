@@ -12,7 +12,7 @@
     </div>
     <div class="col-4">
       <div class="card">
-        <img class="card-image img-thumbnail" src="{{ member.photoUrl || './assets/user.png' }}" alt="{{ member.knownAs }}">
+        <img class="card-image img-thumbnail" src="{{ member.photoUrl || '../../../../../assets/user.png' }}" alt="{{ member.knownAs }}">
         <div class="card-body">
           <div>
             <strong>Location:</strong>
@@ -85,7 +85,11 @@
           </form>
         </tab>
         <tab heading="Edit photos">
-          Photo edit
+          <app-photo-editor
+            [member]="member"
+            (memberChange)="onMemberChange($event)"
+          >
+          </app-photo-editor>
         </tab>
       </tabset>
     </div>

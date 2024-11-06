@@ -5,3 +5,10 @@
 .dropdown-toggle {
   text-decoration: none;
 }
+
+.main-profile-image {
+  max-height: 50px;
+  border-radius: 10%;
+  border: 2px solid white;
+  display: inline;
+}

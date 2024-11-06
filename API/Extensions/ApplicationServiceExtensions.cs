@@ -1,4 +1,5 @@
 using API.Data;
+using API.Helpers;
 using API.Interfaces;
 using API.Repositories;
 using API.Services;
@@ -19,9 +20,13 @@ public static class ApplicationServiceExtensions
       options.UseSqlite(config.GetConnectionString("DefaultConnection"));
     });
     services.AddCors();
+
     services.AddScoped<ITokenService, TokenService>();
     services.AddScoped<IAppUserRepository, AppUserRepository>();
+    services.AddScoped<IPhotoService, PhotoService>();
+
     services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+    services.Configure<CloudinarySettings>(config.GetSection("CloudinarySettings"));
 
     return services;
   }
