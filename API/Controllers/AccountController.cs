@@ -4,6 +4,7 @@ using API.Data;
 using API.DTOs;
 using API.Entities;
 using API.Interfaces;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,34 +12,33 @@ namespace API.Controllers;
 
 public class AccountController(
   DataContext context,
-  ITokenService tokenService
+  ITokenService tokenService,
+  IMapper mapper
 ) : BaseApiController
 {
   [HttpPost("register")]
   public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto)
   {
     if (await UserExists(registerDto.Username)) return BadRequest("Username already taken.");
-    return Ok();
 
-    // using var hmac = new HMACSHA512();
+    using var hmac = new HMACSHA512();
 
-    // var newAppUser = new AppUser
-    // {
-    //   UserName = registerDto.Username.ToLower(),
-    //   PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.Password)),
-    //   PasswordSalt = hmac.Key
-    // };
+    var newAppUser = mapper.Map<AppUser>(registerDto);
+    newAppUser.UserName = registerDto.Username.ToLower();
+    newAppUser.PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.Password));
+    newAppUser.PasswordSalt = hmac.Key;
 
-    // context.AppUsers.Add(newAppUser);
-    // await context.SaveChangesAsync();
+    context.AppUsers.Add(newAppUser);
+    await context.SaveChangesAsync();
 
-    // return Ok(
-    //   new UserDto
-    //   {
-    //     Username = newAppUser.UserName,
-    //     Token = tokenService.CreateToken(newAppUser)
-    //   }
-    // );
+    return Ok(
+      new UserDto
+      {
+        Username = newAppUser.UserName,
+        Token = tokenService.CreateToken(newAppUser),
+        KnownAs = newAppUser.KnownAs
+      }
+    );
   }
 
   [HttpPost("login")]
@@ -64,7 +64,8 @@ public class AccountController(
       {
         Username = appUser.UserName,
         Token = tokenService.CreateToken(appUser),
-        PhotoUrl = appUser.Photos.FirstOrDefault(photo => photo.IsMain)?.Url
+        PhotoUrl = appUser.Photos.FirstOrDefault(photo => photo.IsMain)?.Url,
+        KnownAs = appUser.KnownAs
       }
     );
   }
