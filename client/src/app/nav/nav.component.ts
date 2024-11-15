@@ -4,7 +4,6 @@ import { Component, inject } from '@angular/core';
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { AccountsService } from '../_services/accounts.service';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { TitleCasePipe } from '@angular/common';
 
 @Component({
   selector: 'app-nav',
@@ -13,8 +12,7 @@ import { TitleCasePipe } from '@angular/common';
     FormsModule,
     BsDropdownModule,
     RouterLink,
-    RouterLinkActive,
-    TitleCasePipe
+    RouterLinkActive
   ],
   templateUrl: './nav.component.html',
   styleUrl: './nav.component.css'

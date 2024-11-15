@@ -1,70 +1,121 @@
-import { HttpClient } from '@angular/common/http';
-import { inject, Injectable, signal } from '@angular/core';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
+import { inject, Injectable, model, signal } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { IMember } from '../_models/member';
-import { of, tap } from 'rxjs';
 import { IPhoto } from '../_models/photo';
+import { PaginatedResult } from '../_models/pagination';
+import { UserParams } from '../_models/userParams';
+import { of } from 'rxjs';
+import { AccountsService } from './accounts.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MembersService {
   private http = inject(HttpClient);
+  private accountService = inject(AccountsService);
   baseUrl = environment.apiUrl;
-  members = signal<IMember[]>([]);
+  paginatedResult = signal<PaginatedResult<IMember[]> | null>(null);
+  memberCache = new Map();
+  user = this.accountService.currentUser();
+  userParams = signal<UserParams>(new UserParams(this.user));
+
+  resetUserParams() {
+    this.userParams.set(new UserParams(this.user));
+  }
 
   getMembers() {
-    return this.http.get<IMember[]>(`${this.baseUrl}appuser`).subscribe({
-      next: members => this.members.set(members)
+    const response = this.memberCache.get(Object.values(this.userParams()).join('-'));
+
+    if (response) {
+      return this.setPaginatedResponse(response);
+    }
+
+    let params = this.setPaginationHeaders(this.userParams().pageNumber, this.userParams().pageSize);
+
+    params = params.append('minAge', this.userParams().minAge);
+    params = params.append('maxAge', this.userParams().maxAge);
+    params = params.append('gender', this.userParams().gender);
+    params = params.append('orderBy', this.userParams().orderBy);
+
+    return this.http.get<IMember[]>(`${this.baseUrl}appuser`, { observe: 'response', params }).subscribe({
+      next: response => {
+        this.setPaginatedResponse(response);
+        this.memberCache.set(Object.values(this.userParams()).join('-'), response);
+      }
     });
   }
 
+  private setPaginatedResponse(response: HttpResponse<IMember[]>) {
+    this.paginatedResult.set({
+      items: response.body as IMember[],
+      pagination: JSON.parse(response.headers.get('Pagination')!)
+    });
+  }
+
+  private setPaginationHeaders(pageNumber: number, pageSize: number) {
+    let params = new HttpParams();
+
+    if (pageNumber && pageSize) {
+      params = params.append('pageNumber', pageNumber);
+      params = params.append('pageSize', pageSize);
+    }
+
+    return params;
+  }
+
   getMember(username: string) {
-    const member = this.members().find(member => member.username === username);
+    const member: IMember = [...this.memberCache.values()]
+      .reduce((arr, elem) => arr.concat(elem.body), [])
+      .find((m: IMember) => m.username === username);
+
     if (member) {
       return of(member);
     }
-
     return this.http.get<IMember>(`${this.baseUrl}appuser/${username}`);
   }
 
   updateMember(member: IMember) {
     return this.http.put<IMember>(`${this.baseUrl}appuser`, member).pipe(
-      tap(() => {
-        this.members.update(members =>
-          members.map(m =>
-            m.username === member.username
-              ? member
-              : m
-          )
-        );
-      })
+      // tap(() => {
+      //   this.members.update(members =>
+      //     members.map(m =>
+      //       m.username === member.username
+      //         ? member
+      //         : m
+      //     )
+      //   );
+      // })
     );
   }
 
   setMainPhoto(photo: IPhoto) {
     return this.http
       .put(`${this.baseUrl}appuser/set-main-photo/${photo.id}`, {})
-      .pipe(tap(() => {
-        this.members.update(members => members.map(m => {
-          if (m.photos.includes(photo)) {
-            m.photoUrl = photo.url;
-          }
-          return m;
-        }))
-      }));
+      .pipe(
+        // tap(() => {
+        //   this.members.update(members => members.map(m => {
+        //     if (m.photos.includes(photo)) {
+        //       m.photoUrl = photo.url;
+        //     }
+        //     return m;
+        //   }))
+        // })
+      );
   }
 
   deletePhoto(photo: IPhoto) {
     return this.http
       .delete(`${this.baseUrl}appuser/delete-photo/${photo.id}`)
-      .pipe(tap(() => {
-        this.members.update(members => members.map(m => {
-          if (m.photos.includes(photo)) {
-            m.photos = m.photos.filter(p => p.id != photo.id);
-          }
-          return m;
-        }))
-      }));
+      .pipe(
+      // tap(() => {
+      //   this.members.update(members => members.map(m => {
+      //     if (m.photos.includes(photo)) {
+      //       m.photos = m.photos.filter(p => p.id != photo.id);
+      //     }
+      //     return m;
+      //   }))
+      // })
+    );
   }
 }

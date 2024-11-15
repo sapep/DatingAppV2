@@ -36,7 +36,8 @@ public class AccountController(
       {
         Username = newAppUser.UserName,
         Token = tokenService.CreateToken(newAppUser),
-        KnownAs = newAppUser.KnownAs
+        KnownAs = newAppUser.KnownAs,
+        Gender = newAppUser.Gender
       }
     );
   }
@@ -65,7 +66,8 @@ public class AccountController(
         Username = appUser.UserName,
         Token = tokenService.CreateToken(appUser),
         PhotoUrl = appUser.Photos.FirstOrDefault(photo => photo.IsMain)?.Url,
-        KnownAs = appUser.KnownAs
+        KnownAs = appUser.KnownAs,
+        Gender = appUser.Gender
       }
     );
   }
