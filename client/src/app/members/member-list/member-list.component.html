@@ -78,17 +78,17 @@
 @if (memberService.paginatedResult()?.pagination) {
   <div class="d-flex justify-content-center">
     <pagination
-    [boundaryLinks]="true"
-    [totalItems]="memberService.paginatedResult()?.pagination!.totalItems"
-    [itemsPerPage]="memberService.paginatedResult()?.pagination!.itemsPerPage"
-    [maxSize]="10"
-    (pageChanged)="pageChanged($event)"
-    [(ngModel)]="memberService.paginatedResult()?.pagination!.currentPage"
-    previousText="&lsaquo;"
-    nextText="&rsaquo;"
-    firstText="&laquo;"
-    lastText="&raquo;"
+      [boundaryLinks]="true"
+      [totalItems]="memberService.paginatedResult()?.pagination!.totalItems"
+      [itemsPerPage]="memberService.paginatedResult()?.pagination!.itemsPerPage"
+      [maxSize]="10"
+      (pageChanged)="pageChanged($event)"
+      [(ngModel)]="memberService.paginatedResult()?.pagination!.currentPage"
+      previousText="&lsaquo;"
+      nextText="&rsaquo;"
+      firstText="&laquo;"
+      lastText="&raquo;"
     >
-  </pagination>
+    </pagination>
 </div>
 }
