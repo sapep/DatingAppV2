@@ -14,14 +14,12 @@ public class AutoMapperProfiles : Profile
         destination => destination.Age,
         option => option.MapFrom(
           source => source.DateOfBirth.CalculateAge()
-        )
-      )
+        ))
       .ForMember(
         destinationMember => destinationMember.PhotoUrl,
         option => option.MapFrom(
           source => source.Photos.FirstOrDefault(photo => photo.IsMain)!.Url
-        )
-      );
+        ));
 
     CreateMap<Photo, PhotoDto>();
 
@@ -30,5 +28,17 @@ public class AutoMapperProfiles : Profile
     CreateMap<RegisterDto, AppUser>();
 
     CreateMap<string, DateOnly>().ConvertUsing(source => DateOnly.Parse(source));
+
+    CreateMap<Message, MessageDto>()
+      .ForMember(
+        destination => destination.SenderPhotoUrl,
+        option => option.MapFrom(
+          source => source.Sender.Photos.FirstOrDefault(photo => photo.IsMain)!.Url
+        ))
+      .ForMember(
+        destination => destination.RecipientPhotoUrl,
+        option => option.MapFrom(
+          source => source.Recipient.Photos.FirstOrDefault(photo => photo.IsMain)!.Url
+        ));
   }
 }

@@ -7,6 +7,7 @@ public class DataContext(DbContextOptions options) : DbContext(options)
 {
   public DbSet<AppUser> AppUsers { get; set; }
   public DbSet<AppUserLike> Likes { get; set; }
+  public DbSet<Message> Messages { get; set; }
 
   protected override void OnModelCreating(ModelBuilder builder)
   {
@@ -16,15 +17,25 @@ public class DataContext(DbContextOptions options) : DbContext(options)
       .HasKey(key => new { key.SourceUserId, key.TargetUserId });
 
     builder.Entity<AppUserLike>()
-      .HasOne(s => s.SourceUser)
-      .WithMany(l => l.LikedUsers)
-      .HasForeignKey(s => s.SourceUserId)
+      .HasOne(x => x.SourceUser)
+      .WithMany(x => x.LikedUsers)
+      .HasForeignKey(x => x.SourceUserId)
       .OnDelete(DeleteBehavior.Cascade);
 
     builder.Entity<AppUserLike>()
-      .HasOne(s => s.TargetUser)
-      .WithMany(l => l.LikedByUsers)
-      .HasForeignKey(s => s.TargetUserId)
+      .HasOne(x => x.TargetUser)
+      .WithMany(x => x.LikedByUsers)
+      .HasForeignKey(x => x.TargetUserId)
       .OnDelete(DeleteBehavior.Cascade);
+
+    builder.Entity<Message>()
+      .HasOne(x => x.Recipient)
+      .WithMany(x => x.MessagesReceived)
+      .OnDelete(DeleteBehavior.Restrict);
+
+    builder.Entity<Message>()
+      .HasOne(x => x.Sender)
+      .WithMany(x => x.MessagesSent)
+      .OnDelete(DeleteBehavior.Restrict);
   }
 }

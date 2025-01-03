@@ -1,0 +1,23 @@
+.card {
+  border: none;
+}
+
+.chat {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.chat li {
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.rounded-circle {
+  max-height: 50px;
+}
+
+.text-danger {
+  color: #ec5598 !important;
+}
