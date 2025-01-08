@@ -30,7 +30,7 @@ public class MessageController
         var sender = await appUserRepository.GetUserByUsernameAsync(username);
         var recipient = await appUserRepository.GetUserByUsernameAsync(createMessageDto.RecipientUsername);
 
-        if (sender == null || recipient == null)
+        if (sender == null || recipient == null || sender.UserName == null || recipient.UserName == null)
         {
             return BadRequest("Sender or recipient is null");
         }

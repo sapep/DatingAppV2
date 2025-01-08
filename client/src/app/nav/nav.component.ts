@@ -4,6 +4,7 @@ import { Component, inject } from '@angular/core';
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { AccountsService } from '../_services/accounts.service';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { HasRoleDirective } from '../_directives/has-role.directive';
 
 @Component({
   selector: 'app-nav',
@@ -12,7 +13,8 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
     FormsModule,
     BsDropdownModule,
     RouterLink,
-    RouterLinkActive
+    RouterLinkActive,
+    HasRoleDirective
   ],
   templateUrl: './nav.component.html',
   styleUrl: './nav.component.css'
