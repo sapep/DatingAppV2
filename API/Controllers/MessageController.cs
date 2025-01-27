@@ -1,3 +1,4 @@
+using API.Data;
 using API.DTOs;
 using API.Entities;
 using API.Extensions;
@@ -10,12 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers;
 
 [Authorize]
-public class MessageController
-(
-    IMessageRepository messageRepository,
-    IAppUserRepository appUserRepository,
-    IMapper mapper
-) : BaseApiController
+public class MessageController(IUnitOfWork unitOfWork, IMapper mapper) : BaseApiController
 {
     [HttpPost]
     public async Task<ActionResult<MessageDto>> CreateMessage(CreateMessageDto createMessageDto)
@@ -27,8 +23,8 @@ public class MessageController
             return BadRequest("You cannot message yourself");
         }
 
-        var sender = await appUserRepository.GetUserByUsernameAsync(username);
-        var recipient = await appUserRepository.GetUserByUsernameAsync(createMessageDto.RecipientUsername);
+        var sender = await unitOfWork.UserRepository.GetUserByUsernameAsync(username);
+        var recipient = await unitOfWork.UserRepository.GetUserByUsernameAsync(createMessageDto.RecipientUsername);
 
         if (sender == null || recipient == null || sender.UserName == null || recipient.UserName == null)
         {
@@ -44,9 +40,9 @@ public class MessageController
             Content = createMessageDto.Content
         };
 
-        messageRepository.AddMessage(message);
+        unitOfWork.MessageRepository.AddMessage(message);
 
-        if (await messageRepository.SaveAllAsync()) {
+        if (await unitOfWork.CompleteTransaction()) {
             return Ok(mapper.Map<MessageDto>(message));
         }
 
@@ -58,7 +54,7 @@ public class MessageController
     {
         messageParams.Username = User.GetUsername();
 
-        var messages = await messageRepository.GetMessagesForUser(messageParams);
+        var messages = await unitOfWork.MessageRepository.GetMessagesForUser(messageParams);
 
         Response.AddPaginationHeader(messages);
 
@@ -70,14 +66,14 @@ public class MessageController
     {
         var currentUsername = User.GetUsername();
 
-        return Ok(await messageRepository.GetMessageThread(currentUsername, username));
+        return Ok(await unitOfWork.MessageRepository.GetMessageThread(currentUsername, username));
     }
 
     [HttpDelete("{id}")]
     public async Task<ActionResult> DeleteMessage(int id)
     {
         var username = User.GetUsername();
-        var message = await messageRepository.GetMessage(id);
+        var message = await unitOfWork.MessageRepository.GetMessage(id);
 
         if (message == null)
         {
@@ -101,10 +97,10 @@ public class MessageController
         // .NET 8: pattern matching
         if (message is {SenderDeleted: true, RecipientDeleted: true})
         {
-            messageRepository.DeleteMessage(message);
+            unitOfWork.MessageRepository.DeleteMessage(message);
         }
         
-        if (await messageRepository.SaveAllAsync())
+        if (await unitOfWork.CompleteTransaction())
         {
             return Ok();
         }

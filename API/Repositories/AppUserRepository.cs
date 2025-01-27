@@ -67,11 +67,6 @@ public class AppUserRepository(DataContext context, IMapper mapper) : IAppUserRe
       .SingleOrDefaultAsync(user => user.UserName == username);
   }
 
-  public async Task<bool> SaveAllAsync()
-  {
-    return await context.SaveChangesAsync() > 0;
-  }
-
   public void Update(AppUser user)
   {
     context.Entry(user).State = EntityState.Modified;
