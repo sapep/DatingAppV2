@@ -1,4 +1,7 @@
+using API.DTOs;
 using API.Entities;
+using API.Interfaces;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -6,7 +9,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers;
 
-public class AdminController(UserManager<AppUser> userManager) : BaseApiController
+public class AdminController(
+  UserManager<AppUser> userManager,
+  IUnitOfWork unitOfWork,
+  IMapper mapper
+) : BaseApiController
 {
   [Authorize(Policy = "RequireAdminRole")]
   [HttpGet("users-with-roles")]
@@ -51,8 +58,54 @@ public class AdminController(UserManager<AppUser> userManager) : BaseApiControll
 
   [Authorize(Policy = "ModeratePhotoRole")]
   [HttpGet("photos-for-moderation")]
-  public ActionResult GetPhotosForModeration()
+  public async Task<ActionResult<IEnumerable<PhotoDto>>> GetPhotosForModeration()
   {
-    return Ok("Only admins or moderators can see this");
+    var photos = await unitOfWork.PhotoRepository.GetAllUnapprovedPhotos();
+    return Ok(photos);
+  }
+
+  [Authorize(Policy = "ModeratePhotoRole")]
+  [HttpPut("approve-photo/{photoId}")]
+  public async Task<ActionResult<PhotoDto>> ApprovePhoto(int photoId)
+  {
+    var photo = await unitOfWork.PhotoRepository.GetPhoto(photoId);
+
+    if (photo == null) return BadRequest("Photo does not exist");
+
+    var user = await userManager.FindByIdAsync(photo.AppUserId.ToString());
+
+    if (user == null) return BadRequest("User associated with the photo does not exist.");
+
+    var photoCount = user.Photos.Count;
+
+    if (photoCount == 1)
+    {
+      photo.IsMain = true;
+    }
+
+    photo.IsApproved = true;
+
+    await unitOfWork.CompleteTransaction();
+
+    var photoDto = mapper.Map<PhotoDto>(photo);
+
+    return Ok(photoDto);
+  }
+
+  [Authorize(Policy = "ModeratePhotoRole")]
+  [HttpPut("disapprove-photo/{photoId}")]
+  public async Task<ActionResult<PhotoDto>> DisapprovePhoto(int photoId)
+  {
+    var photo = await unitOfWork.PhotoRepository.GetPhoto(photoId);
+
+    if (photo == null) return BadRequest("Photo does not exist");
+
+    photo.IsApproved = false;
+
+    await unitOfWork.CompleteTransaction();
+
+    var photoDto = mapper.Map<PhotoDto>(photo);
+    
+    return Ok(photoDto);
   }
 }

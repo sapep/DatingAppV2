@@ -14,48 +14,66 @@ public class AppUserRepository(DataContext context, IMapper mapper) : IAppUserRe
   public async Task<IEnumerable<AppUser>> GetAllUsersAsync()
   {
     return await context.Users
-      .Include(user => user.Photos)
+      .Include(user => user.Photos.Where(photo => photo.IsApproved))
       .ToListAsync();
   }
 
-    public async Task<MemberDto?> GetMemberAsync(string username)
+  public async Task<MemberDto?> GetMemberAsync(string username, string requestingUsername)
+  {
+    // Users should only be allowed to view their own non-approved photos.
+    if (username == requestingUsername)
+    {
+      var user = await context.Users
+        .Include(user => user.Photos)
+        .Where(user => user.UserName == username)
+        .SingleOrDefaultAsync();
+
+      if (user == null) return null;
+
+      var memberDto = mapper.Map<MemberDto>(user);
+
+      memberDto.Photos = [.. user.Photos.Select(photo => mapper.Map<PhotoDto>(photo))];
+
+      return memberDto;
+    } else
     {
       return await context.Users
         .Where(user => user.UserName == username)
         .ProjectTo<MemberDto>(mapper.ConfigurationProvider)
         .SingleOrDefaultAsync();
     }
+  }
 
-    public async Task<PagedList<MemberDto>> GetMembersAsync(UserParams userParams)
+  public async Task<PagedList<MemberDto>> GetMembersAsync(UserParams userParams)
+  {
+    var query = context.Users.AsQueryable();
+
+    query = query.Where(appUser => appUser.UserName != userParams.CurrentUsername);
+
+    if (userParams.Gender != null)
     {
-      var query = context.Users.AsQueryable();
-
-      query = query.Where(appUser => appUser.UserName != userParams.CurrentUsername);
-
-      if (userParams.Gender != null)
-      {
-        query = query.Where(appUser => appUser.Gender == userParams.Gender);
-      }
-
-      var minDob = DateOnly.FromDateTime(DateTime.Today.AddYears(-userParams.MaxAge - 1));
-      var maxDob = DateOnly.FromDateTime(DateTime.Today.AddYears(-userParams.MinAge));
-
-      query = query.Where(appUser => appUser.DateOfBirth >= minDob && appUser.DateOfBirth <= maxDob);
-
-      query = userParams.OrderBy switch
-      {
-        "created" => query.OrderByDescending(appUser => appUser.Created),
-        _ => query.OrderByDescending(appUser => appUser.LastActive)
-      };
-
-      return await PagedList<MemberDto>.CreateAsync(
-        query.ProjectTo<MemberDto>(mapper.ConfigurationProvider),
-        userParams.PageNumber,
-        userParams.PageSize
-      );
+      query = query.Where(appUser => appUser.Gender == userParams.Gender);
     }
 
-    public async Task<AppUser?> GetUserByIdAsync(int id)
+    var minDob = DateOnly.FromDateTime(DateTime.Today.AddYears(-userParams.MaxAge - 1));
+    var maxDob = DateOnly.FromDateTime(DateTime.Today.AddYears(-userParams.MinAge));
+
+    query = query.Where(appUser => appUser.DateOfBirth >= minDob && appUser.DateOfBirth <= maxDob);
+
+    query = userParams.OrderBy switch
+    {
+      "created" => query.OrderByDescending(appUser => appUser.Created),
+      _ => query.OrderByDescending(appUser => appUser.LastActive)
+    };
+
+    return await PagedList<MemberDto>.CreateAsync(
+      query.ProjectTo<MemberDto>(mapper.ConfigurationProvider),
+      userParams.PageNumber,
+      userParams.PageSize
+    );
+  }
+
+  public async Task<AppUser?> GetUserByIdAsync(int id)
   {
     return await context.Users.FindAsync(id);
   }
@@ -63,7 +81,7 @@ public class AppUserRepository(DataContext context, IMapper mapper) : IAppUserRe
   public async Task<AppUser?> GetUserByUsernameAsync(string username)
   {
     return await context.Users
-      .Include(user => user.Photos)
+      .Include(user => user.Photos.Where(photo => photo.IsApproved))
       .SingleOrDefaultAsync(user => user.UserName == username);
   }
 

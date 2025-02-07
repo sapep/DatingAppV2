@@ -1,1 +1,10 @@
-<p>photo-management works!</p>
+<div style="display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 1rem;">
+  @for (photo of photos; track photo.id) {
+  <div style="display: flex; flex-direction: column; border-radius: 5%; border: 3px solid #dddddd; width: 180px; height: 248px; background-color: #dddddd; align-items: center; gap: 10px">
+    <img style="width: 100%;" [src]="photo.url" alt="An image awaiting approval">
+    <button (click)="handleApprovePhoto(photo.id)" class="btn btn-primary profile-button">
+      <i class="fa fa-check"></i>
+    </button>
+  </div>
+  }
+</div>

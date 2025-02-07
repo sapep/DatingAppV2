@@ -24,6 +24,7 @@ public class AccountController(
 
     var newAppUser = mapper.Map<AppUser>(registerDto);
     newAppUser.UserName = registerDto.Username.ToLower();
+    newAppUser.UserRoles.Add()
 
     var result = await userManager.CreateAsync(newAppUser);
 

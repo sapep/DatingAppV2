@@ -19,6 +19,11 @@ public class AutoMapperProfiles : Profile
         destinationMember => destinationMember.PhotoUrl,
         option => option.MapFrom(
           source => source.Photos.FirstOrDefault(photo => photo.IsMain)!.Url
+        ))
+      .ForMember(
+        destinationMember => destinationMember.Photos,
+        options => options.MapFrom(
+          source => source.Photos.Where(photo => photo.IsApproved)
         ));
 
     CreateMap<Photo, PhotoDto>();

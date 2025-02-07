@@ -43,6 +43,12 @@ export class MemberDetailComponent implements OnInit, OnDestroy {
       next: data => {
         this.member = data['member'];
         this.member && this.member.photos.map(photo =>
+          /**
+           * If the user navigates to their own profile
+           * their unapproved images would be listed here.
+           * We don't want that.
+           */
+          photo.isApproved &&
           this.images.push(
             new ImageItem({ src: photo.url, thumb: photo.url })
           )

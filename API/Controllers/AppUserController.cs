@@ -31,7 +31,8 @@ public class AppUserController(
     [HttpGet("{username}")]
     public async Task<ActionResult<AppUser>> GetUser(string username)
     {
-        var appUser = await unitOfWork.UserRepository.GetMemberAsync(username);
+        var requestingUsername = User.GetUsername();
+        var appUser = await unitOfWork.UserRepository.GetMemberAsync(username, requestingUsername);
 
         if (appUser == null) return NotFound();
 
@@ -62,10 +63,9 @@ public class AppUserController(
         var photo = new Photo
         {
             Url = result.SecureUrl.AbsoluteUri,
-            PublicId = result.PublicId
+            PublicId = result.PublicId,
+            IsApproved = false
         };
-
-        if (user.Photos.Count == 0) photo.IsMain = true;
 
         user.Photos.Add(photo);
 
@@ -88,7 +88,7 @@ public class AppUserController(
         if (user == null) return BadRequest("Could not find user");
 
         var photo = user.Photos.FirstOrDefault(photo => photo.Id == photoId);
-        if (photo == null || photo.IsMain) return BadRequest("Cannot use selected photo as main photo");
+        if (photo == null || photo.IsMain || !photo.IsApproved) return BadRequest("Cannot use selected photo as main photo");
 
         var currentMain = user.Photos.FirstOrDefault(photo => photo.IsMain);
         if (currentMain != null) currentMain.IsMain = false;
